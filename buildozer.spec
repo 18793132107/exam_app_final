@@ -1,11 +1,11 @@
-﻿[app]
-title = 试题练习
+[app]
+title = ??????
 package.name = exampractice
 package.domain = com.zcx
 source.dir = .
 source.include_exts = py,png,jpg,kv,ttf,json,txt
 version = 1.0.0
-requirements = python3, kivy==2.1.0
+requirements = python3,kivy==2.1.0
 orientation = portrait
 fullscreen = 0
 log_level = 2

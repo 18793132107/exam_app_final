@@ -8,7 +8,7 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
-    
+      
     - name: Setup Python
       uses: actions/setup-python@v4
       with:
@@ -22,6 +22,15 @@ jobs:
           python3-pip \
           openjdk-11-jdk \
           zip
+    
+    - name: Fix BOM encoding issue
+      run: |
+        echo "修复 buildozer.spec 文件编码..."
+        # 移除UTF-8 BOM字符
+        sed -i '1s/^\xEF\xBB\xBF//' buildozer.spec
+        # 检查文件内容
+        echo "修复后的文件前5行:"
+        head -5 buildozer.spec
     
     - name: Install Buildozer
       run: |
