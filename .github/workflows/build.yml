@@ -1,18 +1,30 @@
-﻿name: Build APK
-on: [push]
+﻿name: Build Android APK
+on: [push, workflow_dispatch]
 
 jobs:
-build:
-runs-on: ubuntu-latest
-steps:
-  - uses: actions/checkout@v3
-  - uses: actions/setup-python@v4
-    with:
-      python-version: '3.9'
-  - run: pip install buildozer
-  - run: buildozer android debug
-  - uses: actions/upload-artifact@v3
-    if: success()
-    with:
-      name: app-apk
-      path: bin/*.apk
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+    
+    - name: Install Buildozer
+      run: |
+        pip install buildozer
+    
+    - name: Build APK
+      run: |
+        buildozer android debug
+    
+    - name: Upload APK
+      if: success()
+      uses: actions/upload-artifact@v3
+      with:
+        name: exam-app-apk
+        path: bin/*.apk
