@@ -1,0 +1,13 @@
+﻿# Buildozer
+.buildozer/
+bin/
+*.apk
+
+# Python
+__pycache__/
+*.pyc
+
+# Virtual Env
+venv/
+myenv/
+env/

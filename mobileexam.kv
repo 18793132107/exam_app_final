@@ -1,0 +1,524 @@
+#:import utils kivy.utils
+#:import get_color_from_hex kivy.utils.get_color_from_hex
+#:import dp kivy.metrics.dp
+
+# 全局字体设置（所有Label/Button默认字体）
+<Label>:
+    font_name: app.chinese_font_name if app.font_loaded else 'Roboto'
+    color: 0, 0, 0, 1  # 黑色文字
+
+<Button>:
+    font_name: app.chinese_font_name if app.font_loaded else 'Roboto'
+    background_normal: ''  # 去除默认按钮背景
+    background_down: ''    # 去除按下时的默认背景
+    color: 1, 1, 1, 1      # 白色文字
+
+
+# ------------------------------
+# 普通菜单按钮（主屏幕用）
+# ------------------------------
+<MenuButton@Button>:
+    background_color: get_color_from_hex('#4a7ba6')  # 蓝色背景
+    color: 1, 1, 1, 1                                 # 白色文字
+    font_size: '18sp'
+    size_hint_y: None
+    height: dp(50)                                     # 固定高度50dp
+    size_hint_x: 0.9                                   # 宽度占父容器90%
+    pos_hint: {'center_x': 0.5}                        # 水平居中
+    halign: 'center'                                   # 文字居中
+
+
+# ------------------------------
+# 自定义按钮（练习/考试页面用）
+# ------------------------------
+<CustomButton@Button>:
+    background_color: get_color_from_hex('#4a7ba6')  # 蓝色背景
+    background_normal: ''
+    background_down: ''
+    color: 1, 1, 1, 1                                 # 白色文字
+    font_size: '16sp'
+    bold: True                                         # 粗体
+    size_hint_y: None
+    height: dp(45)                                     # 固定高度45dp
+
+
+# ------------------------------
+# 自定义标签（通用文本显示）
+# ------------------------------
+<CustomLabel@Label>:
+    color: 0, 0, 0, 1                                  # 黑色文字
+    font_size: '14sp'
+
+
+# ------------------------------
+# 主屏幕（MainScreen）
+# ------------------------------
+<MainScreen>:
+    BoxLayout:
+        orientation: 'vertical'                          # 垂直排列子组件
+        padding: dp(15)                                   # 内边距15dp
+        spacing: dp(15)                                   # 子组件间距15dp
+
+        # 标题
+        Label:
+            text: '智能试题练习系统'
+            font_size: '22sp'
+            color: 0, 0, 0, 1
+            size_hint_y: 0.2                              # 占屏幕高度20%
+            font_name: app.chinese_font_name if app.font_loaded else 'Roboto'
+
+        # 菜单按钮区域（占屏幕高度80%）
+        GridLayout:
+            cols: 1                                        # 1列布局
+            spacing: dp(12)                                 # 按钮间距12dp
+            size_hint_y: 0.8
+
+            # 开始练习按钮
+            MenuButton:
+                text: '开始练习'
+                on_press: root.start_practice()            # 绑定点击事件
+                font_name: app.chinese_font_name if app.font_loaded else 'Roboto'
+
+            # 模拟考试按钮
+            MenuButton:
+                text: '模拟考试'
+                on_press: root.start_exam()
+                font_name: app.chinese_font_name if app.font_loaded else 'Roboto'
+
+            # 错题复习按钮
+            MenuButton:
+                text: '错题复习'
+                on_press: root.review_mistakes()
+                font_name: app.chinese_font_name if app.font_loaded else 'Roboto'
+
+            # 题库统计按钮
+            MenuButton:
+                text: '题库统计'
+                on_press: root.show_stats()
+                font_name: app.chinese_font_name if app.font_loaded else 'Roboto'
+
+            # 系统设置按钮
+            MenuButton:
+                text: '系统设置'
+                on_press: root.system_settings()
+                font_name: app.chinese_font_name if app.font_loaded else 'Roboto'
+
+        # 退出按钮（占屏幕高度10%）
+        MenuButton:
+            text: '退出'
+            size_hint_y: 0.1
+            background_color: get_color_from_hex('#8B0000')  # 红色背景
+            on_press: root.exit_app()
+            font_name: app.chinese_font_name if app.font_loaded else 'Roboto'
+
+
+# ------------------------------
+# 练习屏幕（PracticeScreen）- 优化后
+# ------------------------------
+<PracticeScreen>:
+    BoxLayout:
+        orientation: 'vertical'
+        padding: dp(10)
+        spacing: dp(8)
+
+        # 顶部按钮+进度条（占屏幕高度10%）
+        BoxLayout:
+            orientation: 'horizontal'
+            size_hint_y: 0.1
+
+            # 返回按钮
+            CustomButton:
+                text: '← 返回'
+                size_hint_x: 0.3                              # 宽度占30%
+                on_press: root.go_back()
+
+            # 进度标签
+            Label:
+                id: progress_label
+                text: '进度: 0/0'
+                color: 0, 0, 0, 1
+                size_hint_x: 0.7                              # 宽度占70%
+                font_size: '14sp'
+                font_name: app.chinese_font_name if app.font_loaded else 'Roboto'
+
+        # 题目显示区域（占屏幕高度60%，支持滚动）
+        ScrollView:
+            size_hint_y: 0.6                                 # 关键修改：增大高度至60%
+            size_hint_x: 1
+
+            Label:
+                id: question_label
+                text: '题目内容'
+                color: 0, 0, 0, 1
+                font_size: '16sp'
+                text_size: self.width, None                  # 宽度适应父容器，高度自动扩展
+                size_hint_y: None                             # 必须设为None，否则高度固定
+                height: self.texture_size[1]                 # 高度等于文本内容高度
+                halign: 'left'                                # 左对齐
+                valign: 'top'                                 # 顶部对齐
+                font_name: app.chinese_font_name if app.font_loaded else 'Roboto'
+
+        # 选项区域（占屏幕高度30%，支持滚动）
+        ScrollView:
+            size_hint_y: 0.3                                 # 占屏幕高度30%
+            size_hint_x: 1
+
+            GridLayout:
+                id: options_container
+                cols: 1                                        # 1列布局（垂直排列选项）
+                spacing: dp(8)                                 # 选项间距8dp
+                size_hint_y: None                             # 高度由内容决定
+                height: self.minimum_height                   # 高度等于子组件总高度
+                row_default_height: dp(45)                     # 每行选项高度45dp
+
+        # 提交按钮（占屏幕高度10%）
+        CustomButton:
+            text: '提交答案'
+            size_hint_y: 0.1
+            background_color: get_color_from_hex('#4CAF50')  # 绿色背景
+            on_press: root.submit_answer()
+            font_name: app.chinese_font_name if app.font_loaded else 'Roboto'
+
+
+# ------------------------------
+# 考试屏幕（ExamScreen）
+# ------------------------------
+<ExamScreen>:
+    BoxLayout:
+        orientation: 'vertical'
+        padding: dp(8)
+        spacing: dp(8)
+
+        # 顶部信息栏（占屏幕高度8%）
+        BoxLayout:
+            orientation: 'horizontal'
+            size_hint_y: 0.08
+
+            # 退出考试按钮
+            MenuButton:
+                text: '退出考试'
+                size_hint_x: 0.25
+                background_color: get_color_from_hex('#8B0000')  # 红色背景
+                font_size: '14sp'
+                height: dp(40)
+                on_press: root.go_back()
+                font_name: app.chinese_font_name if app.font_loaded else 'Roboto'
+
+            # 剩余时间标签
+            Label:
+                id: timer_label
+                text: '剩余时间: 60:00'
+                color: 0, 0, 0, 1
+                size_hint_x: 0.3
+                font_size: '12sp'
+                font_name: app.chinese_font_name if app.font_loaded else 'Roboto'
+
+            # 进度标签
+            Label:
+                id: progress_label
+                text: '第1题/共50题'
+                color: 0, 0, 0, 1
+                size_hint_x: 0.45
+                font_size: '12sp'
+                halign: 'right'                                 # 右对齐
+                font_name: app.chinese_font_name if app.font_loaded else 'Roboto'
+
+        # 题目区域（占屏幕高度35%，支持滚动）
+        ScrollView:
+            size_hint_y: 0.35
+            Label:
+                id: question_label
+                text: ''
+                color: 0, 0, 0, 1
+                font_size: '14sp'
+                text_size: self.width, None
+                size_hint_y: None
+                height: self.texture_size[1]
+                halign: 'left'
+                valign: 'top'
+                font_name: app.chinese_font_name if app.font_loaded else 'Roboto'
+
+        # 选项区域（占屏幕高度35%）
+        GridLayout:
+            id: options_container
+            cols: 1
+            spacing: dp(8)
+            size_hint_y: 0.35
+            row_default_height: dp(50)
+
+        # 底部按钮（占屏幕高度12%）
+        BoxLayout:
+            orientation: 'horizontal'
+            size_hint_y: 0.12
+            padding: [dp(5), 0]
+            spacing: dp(6)
+
+            # 上一题按钮
+            MenuButton:
+                text: '上一题'
+                size_hint_x: 0.25
+                font_size: '14sp'
+                height: dp(40)
+                on_press: root.prev_question()
+                font_name: app.chinese_font_name if app.font_loaded else 'Roboto'
+
+            # 提交答案按钮
+            MenuButton:
+                text: '提交答案'
+                size_hint_x: 0.25
+                size_hint_y: None
+                height: dp(40)
+                font_size: '14sp'
+                background_color: get_color_from_hex('#4CAF50')  # 绿色背景
+                on_press: root.submit_answer()
+                font_name: app.chinese_font_name if app.font_loaded else 'Roboto'
+
+            # 下一题按钮
+            MenuButton:
+                text: '下一题'
+                size_hint_x: 0.25
+                font_size: '14sp'
+                height: dp(40)
+                on_press: root.next_question()
+                font_name: app.chinese_font_name if app.font_loaded else 'Roboto'
+
+
+# ------------------------------
+# ------------------------------
+# 复习屏幕（ReviewScreen）- 修改选项对齐方式
+# ------------------------------
+<ReviewScreen>:
+    BoxLayout:
+        orientation: 'vertical'
+        padding: dp(10)
+        spacing: dp(8)
+
+        # 顶部按钮+进度条（占屏幕高度10%）
+        BoxLayout:
+            orientation: 'horizontal'
+            size_hint_y: 0.1
+
+            # 返回按钮
+            CustomButton:
+                text: '← 返回'
+                size_hint_x: 0.3
+                on_press: root.go_back()
+
+            # 进度标签
+            Label:
+                id: progress_label
+                text: '进度: 0/0'
+                color: 0, 0, 0, 1
+                size_hint_x: 0.7
+                font_size: '14sp'
+                font_name: app.chinese_font_name if app.font_loaded else 'Roboto'
+
+        # 题目显示区域（占屏幕高度50%，支持滚动）
+        ScrollView:
+            size_hint_y: 0.5
+            size_hint_x: 1
+
+            Label:
+                id: question_label
+                text: '题目内容'
+                color: 0, 0, 0, 1
+                font_size: '16sp'
+                text_size: self.width, None
+                size_hint_y: None
+                height: self.texture_size[1]
+                halign: 'left'  # 左对齐
+                valign: 'top'
+                font_name: app.chinese_font_name if app.font_loaded else 'Roboto'
+
+        # 选项区域（占屏幕高度30%，支持滚动）- 修改选项按钮样式
+        ScrollView:
+            size_hint_y: 0.3
+            size_hint_x: 1
+
+            GridLayout:
+                id: options_container
+                cols: 1
+                spacing: dp(8)
+                size_hint_y: None
+                height: self.minimum_height
+                # 修改选项按钮的默认高度和样式
+                row_default_height: dp(50)
+                row_force_default: True  # 强制使用默认高度
+
+        # 提交按钮（占屏幕高度10%）
+        CustomButton:
+            text: '下一题'
+            size_hint_y: 0.1
+            background_color: get_color_from_hex('#4CAF50')
+            on_press: root.next_question()
+            font_name: app.chinese_font_name if app.font_loaded else 'Roboto'
+
+# 定义错题复习专用的选项按钮样式
+<ReviewOptionButton@ToggleButton>:
+    font_size: '16sp'
+    size_hint_y: None
+    height: dp(50)
+    background_color: (0.9, 0.9, 0.9, 1)
+    background_normal: ''
+    color: 0, 0, 0, 1
+    group: 'options'  # 默认分组，会在代码中根据题型调整
+    # 关键修改：确保文字左对齐且在同一行
+    halign: 'left'
+    valign: 'middle'
+    text_size: self.width - dp(20), self.height  # 限制文本宽度，确保不换行
+    padding: [dp(10), 0]
+    shorten: False  # 禁止文本缩短
+    shorten_from: 'right'
+    max_lines: 1  # 限制为单行显示
+# ------------------------------
+# 弹窗全局样式（关键：设置标题字体）
+# ------------------------------
+<Popup>:
+    title_font: 'chinese_font' if app.font_loaded else 'Roboto'  # 标题使用中文字体
+    title_size: '18sp'                                            # 标题字体大小18sp
+    background_color: (1, 1, 1, 1)                                 # 白色背景
+    separator_color: (0.8, 0.8, 0.8, 1)                            # 标题栏分割线颜色
+
+# ------------------------------
+# ------------------------------
+# 统计屏幕（StatsScreen）
+# ------------------------------
+<StatsScreen>:
+    BoxLayout:
+        orientation: 'vertical'
+        padding: dp(15)
+        spacing: dp(10)
+
+        # 标题栏
+        BoxLayout:
+            orientation: 'horizontal'
+            size_hint_y: 0.1
+            
+            # 返回按钮
+            CustomButton:
+                text: '← 返回'
+                size_hint_x: 0.3
+                on_press: root.go_back()
+            
+            # 标题
+            Label:
+                text: '题库统计'
+                font_size: '18sp'
+                color: 0, 0, 0, 1
+                size_hint_x: 0.7
+                halign: 'center'
+
+        # 统计内容区域（支持滚动）
+        ScrollView:
+            size_hint_y: 0.9
+            
+            Label:
+                id: stats_label
+                text: '正在加载统计信息...'
+                color: 0, 0, 0, 1
+                font_size: '14sp'
+                text_size: self.width - dp(20), None
+                size_hint_y: None
+                height: self.texture_size[1]
+                halign: 'left'
+                valign: 'top'
+                padding: [dp(10), dp(10)]
+
+# ------------------------------
+# 进度屏幕（ProgressScreen）
+# ------------------------------
+<ProgressScreen>:
+    BoxLayout:
+        orientation: 'vertical'
+        padding: dp(15)
+        spacing: dp(10)
+
+        # 标题栏
+        BoxLayout:
+            orientation: 'horizontal'
+            size_hint_y: 0.1
+            
+            # 返回按钮
+            CustomButton:
+                text: '← 返回'
+                size_hint_x: 0.3
+                on_press: root.go_back()
+            
+            # 标题
+            Label:
+                text: '学习进度'
+                font_size: '18sp'
+                color: 0, 0, 0, 1
+                size_hint_x: 0.7
+                halign: 'center'
+
+        # 进度内容区域（支持滚动）
+        ScrollView:
+            size_hint_y: 0.9
+            
+            Label:
+                id: progress_label
+                text: '正在加载学习进度...'
+                color: 0, 0, 0, 1
+                font_size: '14sp'
+                text_size: self.width - dp(20), None
+                size_hint_y: None
+                height: self.texture_size[1]
+                halign: 'left'
+                valign: 'top'
+                padding: [dp(10), dp(10)]
+
+# ------------------------------
+# 设置屏幕（SettingsScreen）
+# ------------------------------
+<SettingsScreen>:
+    BoxLayout:
+        orientation: 'vertical'
+        padding: dp(15)
+        spacing: dp(10)
+
+        # 标题栏
+        BoxLayout:
+            orientation: 'horizontal'
+            size_hint_y: 0.1
+            
+            # 返回按钮
+            CustomButton:
+                text: '← 返回'
+                size_hint_x: 0.3
+                on_press: root.go_back()
+            
+            # 标题
+            Label:
+                text: '系统设置'
+                font_size: '18sp'
+                color: 0, 0, 0, 1
+                size_hint_x: 0.7
+                halign: 'center'
+
+        # 设置内容区域（支持滚动）
+        ScrollView:
+            size_hint_y: 0.9
+            
+            GridLayout:
+                id: settings_container
+                cols: 1
+                spacing: dp(10)
+                size_hint_y: None
+                height: self.minimum_height
+                padding: [dp(10), dp(10)]
+
+                # 保存设置按钮
+                CustomButton:
+                    text: '保存设置'
+                    background_color: get_color_from_hex('#4CAF50')
+                    on_press: root.save_settings()
+                
+                Label:
+                    text: '设置功能开发中...\\n完整设置界面将在后续版本中提供'  # 修复：使用\\n而不是直接换行
+                    font_size: '16sp'
+                    color: 0, 0, 0, 1
+                    size_hint_y: None
+                    height: dp(80)
+                    text_size: self.width, None
+                    halign: 'center'
